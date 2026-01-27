@@ -99,19 +99,20 @@ def list_wiki_pages():
     return titles
 
 
-@mcp.tool
-def search_wiki_pages(query: str):
-    """
-    Search the content of wiki pages for specific information.
+# TODO
+# @mcp.tool
+# def search_wiki_pages(query: str):
+#     """
+#     Search the content of wiki pages for specific information.
 
-    Uses a similarity based search, not keywords.
+#     Uses a similarity based search, not keywords.
 
-    Args:
-        query (str): The query to search for.
+#     Args:
+#         query (str): The query to search for.
 
-    Returns:
-        list[str]: Chunks from wiki pages that match the query.
-    """
+#     Returns:
+#         list[str]: Chunks from wiki pages that match the query.
+#     """
 
 
 if __name__ == "__main__":
