@@ -31,10 +31,9 @@ mlflow.langchain.autolog()
 @cl.password_auth_callback
 def auth_callback(username: str, password: str):
     """Authorize using basic auth."""
-    # Fetch the user matching username from your database
-    # and compare the hashed password with the value stored in the database
-    if (username, password) == ("admin", "admin"):
-        return cl.User(identifier="admin", metadata={"role": "admin", "provider": "credentials"})
+    # Allow in any users with the right password, but capture their username
+    if password == "admin":
+        return cl.User(identifier=username, metadata={"role": "admin", "provider": "credentials"})
     else:
         return None
 
@@ -181,7 +180,9 @@ async def main(message: cl.Message):
     messages = [{"role": "user", "content": message.content}]
     message_history.extend(messages)
 
+    # Get the active user and add to trace
     app_user = get_app_user()
+    mlflow.update_current_trace(metadata={"mlflow.trace.user": app_user.identifier})
 
     # Construct the graph input
     input = {"messages": messages, "user_info": app_user.identifier}
