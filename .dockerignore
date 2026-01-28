@@ -3,11 +3,11 @@
 !src
 
 !.chainlit
-!db
+!db/.gitkeep
 !public
 !scripts
 !tests
-!wiki
+!wiki/.gitkeep
 !.env.example
 !.gitignore
 !.justfile
