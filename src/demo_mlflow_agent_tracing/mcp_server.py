@@ -63,29 +63,32 @@ def create_new_wiki_page(topic: str) -> str:
     Returns:
         str: Success message when wiki page creation is successful.
     """
-    # Create wiki page
-    llm = get_chat_model()
-    llm.temperature = 0.3
-    prompt = WIKI_WRITER_PROMPT.format(topic=topic, date=datetime.now().date())
-    retry_count = 0
-    wiki_page = None
-    while retry_count < 3:
-        response = llm.invoke([{"role": "user", "content": prompt}])
-        raw_page_content = response.content
-        markdown_content = extract_markdown_content(raw_page_content)
-        if markdown_content is not None:
-            break
-        retry_count += 1
+    try:
+        # Create wiki page
+        llm = get_chat_model()
+        llm.temperature = 0.3
+        prompt = WIKI_WRITER_PROMPT.format(topic=topic, date=datetime.now().date())
+        retry_count = 0
+        wiki_page = None
+        while retry_count < 3:
+            response = llm.invoke([{"role": "user", "content": prompt}])
+            raw_page_content = response.content
+            markdown_content = extract_markdown_content(raw_page_content)
+            if markdown_content is not None:
+                break
+            retry_count += 1
 
-    if wiki_page is None:
-        wiki_page = raw_page_content
+        if wiki_page is None:
+            wiki_page = raw_page_content
 
-    # Save wiki page
-    path = WIKI_PATH / (topic.title() + ".md")
-    with open(path, "w") as f:
-        f.write(wiki_page.strip())
+        # Save wiki page
+        path = WIKI_PATH / (topic.title() + ".md")
+        with open(path, "w") as f:
+            f.write(wiki_page.strip())
 
-    return f"Successfully wrote and saved a new wiki page for topic '{topic}'"
+        return f"Successfully wrote and saved a new wiki page for topic '{topic}'"
+    except Exception as e:
+        return f"Failed to write and save a new wiki page for topic '{topic}': {str(e)}"
 
 
 @mcp.tool
@@ -97,14 +100,17 @@ def list_wiki_pages():
         list[str]: Available wiki pages
 
     """  # noqa: D406
-    # Get pages
-    pages = list(WIKI_PATH.glob("*.md"))
+    try:
+        # Get pages
+        pages = list(WIKI_PATH.glob("*.md"))
 
-    # Get page titles
-    titles = [frontmatter.loads(page.read_text()).get("title") for page in pages]
-    titles = [title for title in titles if title is not None]
+        # Get page titles
+        titles = [frontmatter.loads(page.read_text()).get("title") for page in pages]
+        titles = [title for title in titles if title is not None]
 
-    return titles
+        return titles
+    except Exception as e:
+        return f"Failed to list files: {str(e)}"
 
 
 # TODO
