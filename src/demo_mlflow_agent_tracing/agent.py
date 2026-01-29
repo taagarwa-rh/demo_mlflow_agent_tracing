@@ -47,6 +47,9 @@ async def build_agent():
                     "OPENAI_MODEL_NAME": settings.OPENAI_MODEL_NAME,
                     "OPENAI_BASE_URL": settings.OPENAI_BASE_URL,
                     "CHAINLIT_AUTH_SECRET": settings.CHAINLIT_AUTH_SECRET.get_secret_value(),
+                    "EMBEDDING_API_KEY": settings.EMBEDDING_API_KEY.get_secret_value(),
+                    "EMBEDDING_MODEL_NAME": settings.EMBEDDING_MODEL_NAME,
+                    "EMBEDDING_BASE_URL": settings.EMBEDDING_BASE_URL,
                 },
             }
         }
