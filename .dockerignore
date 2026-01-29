@@ -12,7 +12,7 @@
 !.gitignore
 !.justfile
 !.python-version
-!.chainlit.md
+!chainlit.md
 !Containerfile
 !pyproject.toml
 !README.md
