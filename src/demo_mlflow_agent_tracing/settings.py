@@ -18,11 +18,11 @@ class Settings(BaseSettings):
     OPENAI_BASE_URL: Optional[str] = Field(None, description="Base URL of the server")
 
     # Embedding Server
-    # EMBEDDING_API_KEY: Optional[SecretStr] = Field(None, description="API key for authenticating with the server")
-    # EMBEDDING_MODEL_NAME: Optional[str] = Field(None, description="Name of the model to use (e.g. `nomic-embed-text`)")
-    # EMBEDDING_BASE_URL: Optional[str] = Field(None, description="Base URL of the server")
-    # EMBEDDING_DOCUMENT_PREFIX: Optional[str] = Field("", description="Prefix for embeddings for documents")
-    # EMBEDDING_SEARCH_PREFIX: Optional[str] = Field("", description="Prefix for embeddings for search queries")
+    EMBEDDING_API_KEY: Optional[SecretStr] = Field(None, description="API key for authenticating with the server")
+    EMBEDDING_MODEL_NAME: Optional[str] = Field(None, description="Name of the model to use (e.g. `nomic-embed-text`)")
+    EMBEDDING_BASE_URL: Optional[str] = Field(None, description="Base URL of the server")
+    EMBEDDING_DOCUMENT_PREFIX: Optional[str] = Field(None, description="Prefix for embeddings for documents")
+    EMBEDDING_SEARCH_PREFIX: Optional[str] = Field(None, description="Prefix for embeddings for search queries")
 
     # Chainlit
     CHAINLIT_AUTH_SECRET: Optional[SecretStr] = Field(
@@ -45,10 +45,10 @@ class Settings(BaseSettings):
         """Check if required Keycloak environment variables are set."""
         return self.CHAINLIT_AUTH_SECRET is not None
 
-    # @property
-    # def embedding_server_enabled(self) -> bool:
-    #     """Check if optional embedding server environment variables are set."""
-    #     return self.EMBEDDING_API_KEY is not None and self.EMBEDDING_MODEL_NAME is not None
+    @property
+    def embedding_server_enabled(self) -> bool:
+        """Check if optional embedding server environment variables are set."""
+        return self.EMBEDDING_API_KEY is not None and self.EMBEDDING_MODEL_NAME is not None
 
     @model_validator(mode="after")
     def llm(self) -> Self:

@@ -38,8 +38,8 @@ def main():
         row_id = row["id"]
         
         # Add document prefix (if exists)
-        # if settings.EMBEDDING_DOCUMENT_PREFIX is not None:
-        #     content = settings.EMBEDDING_DOCUMENT_PREFIX + content
+        if settings.EMBEDDING_DOCUMENT_PREFIX is not None:
+            content = settings.EMBEDDING_DOCUMENT_PREFIX + content
 
         # Create a document
         document = Document(page_content=content, metadata={"row_id": row_id, "dataset": dataset})
