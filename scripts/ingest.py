@@ -4,10 +4,8 @@ from datasets import load_dataset
 from demo_mlflow_agent_tracing.constants import DB_PATH
 from demo_mlflow_agent_tracing.db import get_db
 from langchain_core.documents import Document
-from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
-logging.getLogger("httpx").setLevel(logging.ERROR)
 
 
 def main():
@@ -29,16 +27,19 @@ def main():
     db.reset_collection()
 
     # Load all texts as documents
-    for row in tqdm(corpus, desc="Embedding documents..."):
+    documents = []
+    for row in corpus:
         # Get the file content and id
         content = row["passage"]
         row_id = row["id"]
 
         # Create a document
         document = Document(page_content=content, metadata={"row_id": row_id, "dataset": dataset})
+        documents.append(document)
 
-        # Save the document to chroma
-        db.add_documents(documents=[document])
+    # Save the document to chroma
+    logger.info("Loading texts into Chroma DB...")
+    db.add_documents(documents=documents)
 
 
 if __name__ == "__main__":
