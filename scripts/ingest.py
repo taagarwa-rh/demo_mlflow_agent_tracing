@@ -7,6 +7,7 @@ from langchain_core.documents import Document
 from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
+logging.getLogger("httpx").setLevel(logging.ERROR)
 
 
 def main():
