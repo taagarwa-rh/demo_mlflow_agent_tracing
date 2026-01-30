@@ -1,7 +1,7 @@
 import mlflow
 from demo_mlflow_agent_tracing.constants import DIRECTORY_PATH
 from demo_mlflow_agent_tracing.settings import Settings
-from mlflow.genai.datasets import create_dataset, get_dataset, set_dataset_tags
+from mlflow.genai.datasets import create_dataset
 from openai import OpenAI
 from pydantic import BaseModel
 
@@ -46,8 +46,8 @@ Please provide your {num_pairs} question and answer pairs about this document. P
 
 {{
     "pairs": [
-        {{"question": "Question 1", "answer": "Answer 1"}},
-        {{"question": "Question 2", "answer": "Answer 2"}},
+        {{"index": 0, "question": "Question 1", "answer": "Answer 1"}},
+        {{"index": 1, "question": "Question 2", "answer": "Answer 2"}},
         ...
     ]
 }}
