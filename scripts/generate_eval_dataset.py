@@ -1,9 +1,11 @@
 import mlflow
+from langchain_core.messages import HumanMessage
+from mlflow.genai.datasets import create_dataset
+from pydantic import BaseModel
+
+from demo_mlflow_agent_tracing.chat_model import get_chat_model
 from demo_mlflow_agent_tracing.constants import DIRECTORY_PATH
 from demo_mlflow_agent_tracing.settings import Settings
-from mlflow.genai.datasets import create_dataset
-from openai import OpenAI
-from pydantic import BaseModel
 
 
 class QuestionAnswerPair(BaseModel):
@@ -63,13 +65,13 @@ def sanitize_string(s: str) -> str:
 
 
 def main():
-    """Generate synthetic QnA pairs."""
-    # Set up OpenAI Client
+    """Generate synthetic QnA pairs using the configured LLM (OpenAI or Vertex)."""
     settings = Settings()
-    model = settings.OPENAI_MODEL_NAME
-    client = OpenAI(
-        api_key=settings.OPENAI_API_KEY,
-        base_url=settings.OPENAI_BASE_URL,
+    llm = get_chat_model()
+    structured_llm = llm.with_structured_output(QuestionAnswerPairs)
+
+    model_name = (
+        settings.OPENAI_MODEL_NAME if settings.openai_enabled else settings.VERTEX_MODEL_NAME
     )
 
     # Fetch document paths
@@ -80,18 +82,12 @@ def main():
     num_pairs = 5
     records: list[MLFlowEvalData] = []
     for path in paths:
-        # Prepare system prompt
+        # Prepare prompt
         document = path.read_text()
         prompt = PROMPT_TEMPLATE.format(num_pairs=num_pairs, document=document)
 
-        # Generate QnAs
-        messages = [{"role": "user", "content": prompt}]
-        response = client.beta.chat.completions.parse(
-            messages=messages,
-            response_format=QuestionAnswerPairs,
-            model=model,
-        )
-        qna_pairs = response.choices[0].message.parsed
+        # Generate QnAs (works for both OpenAI and Vertex)
+        qna_pairs = structured_llm.invoke([HumanMessage(content=prompt)])
 
         # Save generation result in MLFlow format
         for pair in qna_pairs.pairs:
@@ -107,7 +103,7 @@ def main():
         mlflow.set_experiment(settings.MLFLOW_EXPERIMENT_NAME)
     dataset = create_dataset(
         name="oscorp_policies_validation_set",
-        tags={"stage": "validation", "environment": "dev", "model": model, "version": "0.1.0"},
+        tags={"stage": "validation", "environment": "dev", "model": model_name, "version": "0.1.0"},
     )
     dataset.merge_records(records=records)
 

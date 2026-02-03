@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from typing import Any
 from uuid import uuid4
 
@@ -87,21 +88,17 @@ def tool_calling_score(outputs: dict[str, Any], expectations: dict[str, Any]):
     tool_calls = get_tool_calls(outputs=outputs)
     if len(tool_calls) <= 1:
         return Feedback(value="yes", rationale="Exactly one tool call was made")
-    return Feedback(value="no", rationale=f"More than one tool call was made. It look {len(tool_calls)} tool calls before the agent responded.")
+    return Feedback(value="no", rationale=f"More than one tool call was made. It took {len(tool_calls)} tool calls before the agent responded.")
 
 
 async def run_agent(question: str) -> dict[str, Any]:
-    """Run the agent."""
-    # Construct the graph input
+    """Run the agent. Uses in-memory checkpointer so we run on the same thread as the caller (traces work)."""
     user = "evals"
     input = format_input(content=question, user_identifier=user)
     config = format_config(thread_id=str(uuid4()))
     context = format_context(user_identifier=user)
 
-    # Build the agent
-    agent = await build_agent()
-
-    # Get the response from the agent
+    agent = await build_agent(use_memory_checkpointer=True)
     try:
         response = await agent.ainvoke(input=input, config=config, context=context)
         return response
@@ -110,9 +107,8 @@ async def run_agent(question: str) -> dict[str, Any]:
 
 
 def predict(question: str):
-    """Get a prediction from the agent."""
-    result = asyncio.run(run_agent(question=question))
-    return result
+    """Get a prediction from the agent (same thread as caller so MLflow trace context is preserved)."""
+    return asyncio.run(run_agent(question=question))
 
 
 def main():
@@ -125,6 +121,11 @@ def main():
     if settings.MLFLOW_EXPERIMENT_NAME is not None:
         mlflow.set_experiment(settings.MLFLOW_EXPERIMENT_NAME)
 
+    # When using Vertex, set env vars so LiteLLM (used by MLflow scorers) uses the same project/region
+    if settings.vertex_enabled:
+        os.environ["VERTEXAI_PROJECT"] = settings.VERTEX_PROJECT_ID
+        os.environ["VERTEXAI_LOCATION"] = settings.VERTEX_REGION
+
     # Fetch dataset
     dataset_name = "oscorp_policies_validation_set"
     client = MlflowClient()
@@ -133,8 +134,11 @@ def main():
         raise ValueError(f"No dataset matching '{dataset_name}' found")
     dataset = matched_datasets[0]
 
-    # Collect scorers
-    model = f"openai:/{settings.OPENAI_MODEL_NAME}"
+    # Collect scorers (use same provider as agent: OpenAI or Vertex)
+    if settings.openai_enabled:
+        model = f"openai:/{settings.OPENAI_MODEL_NAME}"
+    else:
+        model = f"vertex_ai:/{settings.VERTEX_MODEL_NAME}"
     scorers = [
         Correctness(model=model),
         Completeness(name="Completeness", model=model),
@@ -143,14 +147,9 @@ def main():
         tool_calling_score,
     ]
 
-    # Run evaluation
     results = evaluate(data=dataset, scorers=scorers, predict_fn=predict)
-
-    # Print results
     logger.info("Evaluation results")
     logger.info(f"{results.metrics}")
-
-    return
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ import mlflow
 from langchain.agents import AgentState, create_agent
 from langchain.agents.middleware import before_agent
 from langchain_mcp_adapters.client import MultiServerMCPClient
+from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langgraph.runtime import Runtime
 from mlflow.langchain.langchain_tracer import MlflowLangchainTracer
@@ -55,20 +56,45 @@ def format_context(user_identifier: str):
 
 @before_agent
 def update_tracing(state: AgentState, runtime: Runtime):
-    """Update MLFlow tracing params."""
+    """Update MLFlow tracing params (no-op when no active trace, e.g. during eval)."""
     context: ContextSchema = runtime.context
     user = context.user_info
-    mlflow.update_current_trace(metadata={"mlflow.trace.user": user})
+    try:
+        mlflow.update_current_trace(metadata={"mlflow.trace.user": user})
+    except Exception:
+        # No active trace or non-recording span (e.g. during mlflow.genai.evaluate)
+        pass
 
 
-async def build_agent():
-    """Build the agent."""
+async def build_agent(*, return_connection: bool = False, use_memory_checkpointer: bool = False):
+    """Build the agent.
+
+    - use_memory_checkpointer: use InMemorySaver (no DB); for evals so traces run on same thread and no aiosqlite.
+    - return_connection: when False and not use_memory_checkpointer, returns (agent, conn) for caller to close conn.
+    """
     # Construct the agent
     settings = Settings()
 
     # Get the chat model
     llm = get_chat_model()
     llm.temperature = 0.0
+
+    # Build MCP env: include OpenAI or Vertex vars depending on which LLM backend is configured
+    mcp_env = {
+        "CHAINLIT_AUTH_SECRET": (settings.CHAINLIT_AUTH_SECRET.get_secret_value() if settings.CHAINLIT_AUTH_SECRET else ""),
+        "EMBEDDING_API_KEY": (settings.EMBEDDING_API_KEY.get_secret_value() if settings.EMBEDDING_API_KEY else "") or "",
+        "EMBEDDING_MODEL_NAME": settings.EMBEDDING_MODEL_NAME or "",
+        "EMBEDDING_BASE_URL": settings.EMBEDDING_BASE_URL or "",
+        "EMBEDDING_SEARCH_PREFIX": settings.EMBEDDING_SEARCH_PREFIX,
+    }
+    if settings.openai_enabled:
+        mcp_env["OPENAI_API_KEY"] = settings.OPENAI_API_KEY.get_secret_value()
+        mcp_env["OPENAI_MODEL_NAME"] = settings.OPENAI_MODEL_NAME
+        mcp_env["OPENAI_BASE_URL"] = settings.OPENAI_BASE_URL or ""
+    if settings.vertex_enabled:
+        mcp_env["VERTEX_PROJECT_ID"] = settings.VERTEX_PROJECT_ID
+        mcp_env["VERTEX_REGION"] = settings.VERTEX_REGION
+        mcp_env["VERTEX_MODEL_NAME"] = settings.VERTEX_MODEL_NAME
 
     # Get tools from MCP server
     mcp_client = MultiServerMCPClient(
@@ -77,16 +103,7 @@ async def build_agent():
                 "transport": "stdio",
                 "command": "python",
                 "args": [str(DIRECTORY_PATH / "src" / "demo_mlflow_agent_tracing" / "mcp_server.py")],
-                "env": {
-                    "OPENAI_API_KEY": settings.OPENAI_API_KEY.get_secret_value(),
-                    "OPENAI_MODEL_NAME": settings.OPENAI_MODEL_NAME,
-                    "OPENAI_BASE_URL": settings.OPENAI_BASE_URL,
-                    "CHAINLIT_AUTH_SECRET": settings.CHAINLIT_AUTH_SECRET.get_secret_value(),
-                    "EMBEDDING_API_KEY": settings.EMBEDDING_API_KEY.get_secret_value(),
-                    "EMBEDDING_MODEL_NAME": settings.EMBEDDING_MODEL_NAME,
-                    "EMBEDDING_BASE_URL": settings.EMBEDDING_BASE_URL,
-                    "EMBEDDING_SEARCH_PREFIX": settings.EMBEDDING_SEARCH_PREFIX,
-                },
+                "env": mcp_env,
             }
         }
     )
@@ -100,9 +117,13 @@ async def build_agent():
         logger.info("No system prompt specified. Using default system prompt.")
         system_prompt = SYSTEM_PROMPT
 
-    # Create agent
-    conn = await get_checkpointer_conn()
-    checkpointer = AsyncSqliteSaver(conn=conn)
+    # Create agent (in-memory checkpointer for evals to avoid aiosqlite + preserve trace context)
+    if use_memory_checkpointer:
+        checkpointer = InMemorySaver()
+    else:
+        conn = await get_checkpointer_conn()
+        checkpointer = AsyncSqliteSaver(conn=conn)
+
     agent = create_agent(
         model=llm,
         tools=tools,
@@ -112,4 +133,6 @@ async def build_agent():
         middleware=[update_tracing],
     )
 
+    if not use_memory_checkpointer and return_connection:
+        return (agent, conn)
     return agent

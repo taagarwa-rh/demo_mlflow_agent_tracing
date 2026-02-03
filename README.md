@@ -68,8 +68,8 @@ graph TD
 
 ## Prerequisites
 
-- An OpenAI-compatible LLM server (e.g. OpenAI, vLLM, Ollama, etc.)
-- An OpenAI-compatible embeddings server (e.g. OpenAI, vLLM, Ollama, etc.)
+- An LLM backend: either **OpenAI-compatible** (e.g. OpenAI, vLLM, Ollama) or **Vertex AI** (Claude on Vertex)
+- (Optional) An OpenAI-compatible embeddings server for the knowledge base (e.g. OpenAI, vLLM, Ollama)
 - A remote or local MLFlow server
 
 ## Local Installation
@@ -194,19 +194,25 @@ TODO
 
 ## Environment Variables
 
+Set `LLM_PROVIDER` to `openai` or `vertex`, then set the variables for that provider. All other LLM-related vars are conditional on the chosen provider.
+
 | Variable                             | Required | Default                 | Description                                                                                              |
 | ------------------------------------ | -------- | ----------------------- | -------------------------------------------------------------------------------------------------------- |
-| OPENAI_API_KEY                       | Yes      | `None`                  | API Key for OpenAI-compatible server.                                                                    |
-| OPENAI_MODEL_NAME                    | Yes      | `None`                  | Name of the LLM to use.                                                                                  |
-| OPENAI_BASE_URL                      | No       | `None`                  | Base URL for your OpenAI-compatible server. If not set, this will default to OpenAI's server.            |
-| CHAINLIT_AUTH_SECRET                 | Yes      | `None`                  | Authorization secret for Chainlit login page. You can generate this using `chainlit create-secret`.      |
+| LLM_PROVIDER                         | No       | `openai`                | Which LLM backend to use: `openai` or `vertex`.                                                           |
+| OPENAI_API_KEY                       | When `openai` | `None`             | API key for OpenAI-compatible server.                                                                    |
+| OPENAI_MODEL_NAME                    | When `openai` | `None`             | Name of the LLM to use (e.g. `gpt-4o`, `qwen3:8b`).                                                       |
+| OPENAI_BASE_URL                      | No       | `None`                  | Base URL for your OpenAI-compatible server. Optional.                                                     |
+| VERTEX_PROJECT_ID                    | When `vertex` | `None`              | GCP project ID for Vertex AI (Claude on Vertex).                                                         |
+| VERTEX_REGION                       | When `vertex` | `None`              | Vertex AI region (e.g. `us-central1`).                                                                   |
+| VERTEX_MODEL_NAME                   | When `vertex` | `None`              | Claude model name on Vertex (e.g. `claude-3-5-sonnet@20241022`).                                         |
+| CHAINLIT_AUTH_SECRET                 | No       | `None`                  | Authorization secret for Chainlit chat UI (optional). Generate with `chainlit create-secret` when using the web app. |
 | MLFLOW_TRACKING_URI                  | No       | `http://localhost:5000` | URI for the MLFlow tracking server.                                                                      |
 | MLFLOW_EXPERIMENT_NAME               | No       | `Default`               | Name of the MLFlow experiment to log traces/datasets to.                                                 |
 | MLFLOW_SYSTEM_PROMPT_URI             | No       | `None`                  | System prompt URI from the MLFlow server. If not set, a default system prompt will be used.              |
 | MLFLOW_GENAI_EVAL_MAX_WORKERS        | No       | `10`                    | Maximum number of parallel workers when running evaluations.                                             |
 | MLFLOW_GENAI_EVAL_MAX_SCORER_WORKERS | No       | `10`                    | Maximum number of parallel workers when scoring model outputs during evaluations.                        |
-| EMBEDDING_API_KEY                    | Yes      | `None`                  | API Key for the OpenAI-compatible embeddings server.                                                     |
-| EMBEDDING_MODEL_NAME                 | Yes      | `None`                  | Name of the embedding model to use.                                                                      |
-| EMBEDDING_BASE_URL                   | No       | `None`                  | Base URL for your OpenAI-compatible embeddings server. If not set, this will default to OpenAI's server. |
+| EMBEDDING_API_KEY                    | No       | `None`                  | API key for the OpenAI-compatible embeddings server (optional).                                          |
+| EMBEDDING_MODEL_NAME                 | No       | `None`                  | Name of the embedding model to use (optional).                                                            |
+| EMBEDDING_BASE_URL                   | No       | `None`                  | Base URL for your OpenAI-compatible embeddings server (optional).                                        |
 | EMBEDDING_SEARCH_PREFIX              | No       | ` `                     | Prefix to add to each embeddings search query prior to embedding.                                        |
 | EMBEDDING_DOCUMENT_PREFIX            | No       | ` `                     | Prefix to add to each embeddings document prior to embedding.                                            |
