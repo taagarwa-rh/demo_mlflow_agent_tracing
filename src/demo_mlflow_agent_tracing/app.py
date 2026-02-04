@@ -5,7 +5,6 @@ import logging
 from typing import Any, AsyncIterator
 
 import chainlit as cl
-import mlflow
 from langchain_core.messages import AIMessageChunk
 
 from demo_mlflow_agent_tracing.agent import build_agent, format_config, format_context, format_input
@@ -20,9 +19,6 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 
 # Log settings
 logger.info(f"Settings loaded: {settings}")
-
-# Start MLFlow Autolog
-mlflow.langchain.autolog(run_tracer_inline=True)
 
 
 @cl.password_auth_callback
