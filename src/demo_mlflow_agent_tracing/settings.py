@@ -71,18 +71,10 @@ class Settings(BaseSettings):
         """Validate that required environment variables are set for the selected LLM_PROVIDER."""
         if self.LLM_PROVIDER == "openai":
             if self.OPENAI_API_KEY is None or self.OPENAI_MODEL_NAME is None:
-                raise Exception(
-                    "LLM_PROVIDER is 'openai'. Set OPENAI_API_KEY and OPENAI_MODEL_NAME."
-                )
+                raise Exception("LLM_PROVIDER is 'openai'. Set OPENAI_API_KEY and OPENAI_MODEL_NAME.")
         else:
-            if (
-                self.VERTEX_PROJECT_ID is None
-                or self.VERTEX_REGION is None
-                or self.VERTEX_MODEL_NAME is None
-            ):
-                raise Exception(
-                    "LLM_PROVIDER is 'vertex'. Set VERTEX_PROJECT_ID, VERTEX_REGION, and VERTEX_MODEL_NAME."
-                )
+            if self.VERTEX_PROJECT_ID is None or self.VERTEX_REGION is None or self.VERTEX_MODEL_NAME is None:
+                raise Exception("LLM_PROVIDER is 'vertex'. Set VERTEX_PROJECT_ID, VERTEX_REGION, and VERTEX_MODEL_NAME.")
         return self
 
     # CHAINLIT_AUTH_SECRET is optional; required only when running the Chainlit chat UI.

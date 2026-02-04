@@ -79,10 +79,13 @@ def instrument_mlflow(settings: Settings):
 
 
 async def build_agent(*, return_connection: bool = False, use_memory_checkpointer: bool = False):
-    """Build the agent.
+    """
+    Build the agent.
 
-    - use_memory_checkpointer: use InMemorySaver (no DB); for evals so traces run on same thread and no aiosqlite.
-    - return_connection: when False and not use_memory_checkpointer, returns (agent, conn) for caller to close conn.
+    Args:
+        use_memory_checkpointer (bool): use InMemorySaver (no DB); for evals so traces run on same thread and no aiosqlite.
+        return_connection (bool): when False and not use_memory_checkpointer, returns (agent, conn) for caller to close conn.
+
     """
     # Construct the agent
     settings = Settings()
