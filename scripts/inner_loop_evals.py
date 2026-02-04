@@ -88,7 +88,9 @@ def tool_calling_score(outputs: dict[str, Any], expectations: dict[str, Any]):
     tool_calls = get_tool_calls(outputs=outputs)
     if len(tool_calls) <= 1:
         return Feedback(value="yes", rationale="Exactly one tool call was made")
-    return Feedback(value="no", rationale=f"More than one tool call was made. It took {len(tool_calls)} tool calls before the agent responded.")
+    return Feedback(
+        value="no", rationale=f"More than one tool call was made. It took {len(tool_calls)} tool calls before the agent responded."
+    )
 
 
 async def run_agent(question: str) -> dict[str, Any]:

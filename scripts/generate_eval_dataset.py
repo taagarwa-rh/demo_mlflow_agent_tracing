@@ -1,11 +1,10 @@
 import mlflow
-from langchain_core.messages import HumanMessage
-from mlflow.genai.datasets import create_dataset
-from pydantic import BaseModel
-
 from demo_mlflow_agent_tracing.chat_model import get_chat_model
 from demo_mlflow_agent_tracing.constants import DIRECTORY_PATH
 from demo_mlflow_agent_tracing.settings import Settings
+from langchain_core.messages import HumanMessage
+from mlflow.genai.datasets import create_dataset
+from pydantic import BaseModel
 
 
 class QuestionAnswerPair(BaseModel):
@@ -70,9 +69,7 @@ def main():
     llm = get_chat_model()
     structured_llm = llm.with_structured_output(QuestionAnswerPairs)
 
-    model_name = (
-        settings.OPENAI_MODEL_NAME if settings.openai_enabled else settings.VERTEX_MODEL_NAME
-    )
+    model_name = settings.OPENAI_MODEL_NAME if settings.openai_enabled else settings.VERTEX_MODEL_NAME
 
     # Fetch document paths
     directory = DIRECTORY_PATH / "public" / "oscorp_policies"
