@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import logging
 import os
@@ -16,6 +17,14 @@ from mlflow.genai import evaluate
 from mlflow.genai.scorers import Completeness, Correctness, RelevanceToQuery, scorer
 
 logger = logging.getLogger(__name__)
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse cli arguments."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--run-name", type=str, required=False, default=None)
+    args = parser.parse_args()
+    return args
 
 
 def get_messages(outputs: dict[str, Any]) -> list[BaseMessage]:
@@ -126,6 +135,10 @@ def main():
         os.environ["VERTEXAI_PROJECT"] = settings.VERTEX_PROJECT_ID
         os.environ["VERTEXAI_LOCATION"] = settings.VERTEX_REGION
 
+    # Get cli args
+    args = parse_args()
+    run_name = args.run_name
+
     # Fetch dataset
     dataset_name = "oscorp_policies_validation_set"
     client = MlflowClient()
@@ -147,9 +160,10 @@ def main():
         tool_calling_score,
     ]
 
-    results = evaluate(data=dataset, scorers=scorers, predict_fn=predict)
-    logger.info("Evaluation results")
-    logger.info(f"{results.metrics}")
+    with mlflow.start_run(run_name=run_name):
+        results = evaluate(data=dataset, scorers=scorers, predict_fn=predict)
+        logger.info("Evaluation results")
+        logger.info(f"{results.metrics}")
 
 
 if __name__ == "__main__":
