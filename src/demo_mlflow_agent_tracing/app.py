@@ -5,6 +5,7 @@ import logging
 from typing import Any, AsyncIterator
 
 import chainlit as cl
+import mlflow
 from langchain_core.messages import AIMessageChunk
 from mlflow.entities import AssessmentSource, AssessmentSourceType
 
