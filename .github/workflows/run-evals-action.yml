@@ -62,4 +62,4 @@ jobs:
               -e EMBEDDING_BASE_URL='${{ secrets.EMBEDDING_BASE_URL }}' \
               -e EMBEDDING_SEARCH_PREFIX='${{ vars.EMBEDDING_SEARCH_PREFIX }}' \
               ${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.image-tag }} \
-              /bin/sh -c "uv run --locked --no-sync scripts/ingest.py --run-name ${{ needs.build-and-push.outputs.image-tag }} && uv run --locked --no-sync python scripts/inner_loop_evals.py"
+              /bin/sh -c "uv run --locked --no-sync scripts/ingest.py && uv run --locked --no-sync python scripts/inner_loop_evals.py --run-name ${{ needs.build-and-push.outputs.image-tag }}"
