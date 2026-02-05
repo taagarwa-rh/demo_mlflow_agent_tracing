@@ -13,19 +13,13 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    outputs:
-      image-tag: ${{ steps.meta.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Get image name
         id: image-name
-        run: echo "image=${{ env.IMAGE_NAME }}:$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-
-      - name: Get commit hash
-        id: meta
-        run: echo "tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        run: echo "image=${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_OUTPUT
 
       - name: Login to Quay.io
         uses: docker/login-action@v3
@@ -61,5 +55,5 @@ jobs:
             -e EMBEDDING_MODEL_NAME='${{ vars.EMBEDDING_MODEL_NAME }}' \
             -e EMBEDDING_BASE_URL='${{ secrets.EMBEDDING_BASE_URL }}' \
             -e EMBEDDING_SEARCH_PREFIX='${{ vars.EMBEDDING_SEARCH_PREFIX }}' \
-            ${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.image-tag }} \
-            /bin/sh -c "uv run --locked --no-sync scripts/ingest.py && uv run --locked --no-sync python scripts/inner_loop_evals.py --run-name ${{ needs.build-and-push.outputs.image-tag }}"
+            ${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            /bin/sh -c "uv run --locked --no-sync scripts/ingest.py && uv run --locked --no-sync python scripts/inner_loop_evals.py --run-name ${{ github.sha }}"
