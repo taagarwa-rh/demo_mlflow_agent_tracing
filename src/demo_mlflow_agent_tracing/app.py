@@ -22,9 +22,6 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 # Log settings
 logger.info(f"Settings loaded: {settings}")
 
-# Start MLFlow Autolog
-mlflow.langchain.autolog(run_tracer_inline=True)
-
 
 @cl.password_auth_callback
 def auth_callback(username: str, password: str):
