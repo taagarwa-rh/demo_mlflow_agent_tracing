@@ -25,6 +25,11 @@ dependencies = [
 [project.scripts]
 main = "demo_mlflow_agent_tracing.main:main"
 
+[project.optional-dependencies]
+examples = [
+    "pydantic-ai-slim[openai]>=1.56.0",
+]
+
 [dependency-groups]
 dev = [
     "pytest~=8.1",

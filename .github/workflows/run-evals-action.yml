@@ -4,7 +4,8 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - "**/*.py"
+      - "src/**/*.py"
+      - "scripts/**/*.py"
       - ".github/workflows/run-evals-action.yml"
 
 env:
