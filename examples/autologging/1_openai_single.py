@@ -19,7 +19,7 @@ def main():
     model = os.getenv("OPENAI_MODEL_NAME")
 
     # Trace a single message - no additional changes
-    content = "How fast would a glass of water freeze on Titan?"
+    content = "What is the capital of France?"
     print("Request:\n", content)
     messages = [{"role": "user", "content": content}]
     response = client.chat.completions.create(messages=messages, model=model).choices[0].message.content
