@@ -10,13 +10,13 @@ pre-mr: format lint test
 # Formats code
 [group("Dev")]
 format:
-    uv run ruff check --select I --fix src tests scripts
-    uv run ruff format src tests scripts
+    uv run ruff check --select I --fix src tests scripts examples
+    uv run ruff format src tests scripts examples
 
 # Lints code
 [group("Dev")]
 lint *options:
-    uv run ruff check src tests scripts {{ options }}
+    uv run ruff check src tests scripts examples {{ options }}
 
 # Tests code
 [group("Dev")]
