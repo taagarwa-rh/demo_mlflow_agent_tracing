@@ -1,9 +1,9 @@
 import mlflow
-from demo_mlflow_agent_tracing.chat_model import get_chat_model
-from demo_mlflow_agent_tracing.constants import DIRECTORY_PATH
-from demo_mlflow_agent_tracing.settings import Settings
 from langchain_core.messages import HumanMessage
 from mlflow.genai.datasets import create_dataset
+from nps_agent.chat_model import get_chat_model
+from nps_agent.constants import DIRECTORY_PATH
+from nps_agent.settings import Settings
 from pydantic import BaseModel
 
 

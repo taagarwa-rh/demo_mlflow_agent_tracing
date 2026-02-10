@@ -2,12 +2,12 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: "demo-mlflow-agent-tracing-service"
+  name: "nps-agent-service"
   annotations:
-    service.beta.openshift.io/serving-cert-secret-name: "demo-mlflow-agent-tracing-tls"
+    service.beta.openshift.io/serving-cert-secret-name: "nps-agent-tls"
 spec:
   selector:
-    app: "demo-mlflow-agent-tracing"
+    app: "nps-agent"
   ports:
     - protocol: TCP
       port: 80

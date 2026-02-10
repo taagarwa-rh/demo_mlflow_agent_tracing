@@ -9,8 +9,8 @@ import mlflow
 from langchain_core.messages import AIMessageChunk
 from mlflow.entities import AssessmentSource, AssessmentSourceType
 
-from demo_mlflow_agent_tracing.agent import build_agent, format_config, format_context, format_input
-from demo_mlflow_agent_tracing.settings import Settings
+from nps_agent.agent import build_agent, format_config, format_context, format_input
+from nps_agent.settings import Settings
 
 # Validate settings
 settings = Settings()
@@ -42,7 +42,7 @@ async def set_starters():
     return [
         cl.Starter(
             label="Ask",
-            message="What is included in the Dark-Side Health Plan?",
+            message="Where is the main visitor center at Yellowstone park?",
             icon="/public/sparkle.svg",
         ),
         cl.Starter(
@@ -164,30 +164,3 @@ async def main(message: cl.Message):
 
     # Stream the agent response
     await stream_agent_response(message=message, app_user=app_user)
-
-    # Prompt user for feedback
-    res = await cl.AskActionMessage(
-        content="Was this response helpful?",
-        actions=[
-            cl.Action(name="yes", payload={"value": "yes"}, label="👍 Yes"),
-            cl.Action(name="no", payload={"value": "no"}, label="👎 No"),
-            cl.Action(name="skip", payload={"value": "skip"}, label="❌ Skip"),
-        ],
-    ).send()
-
-    # Record feedback
-    if res:
-        choice = res.get("payload").get("value")
-        if choice == "skip":
-            return
-        else:
-            trace_id = mlflow.get_last_active_trace_id()
-            mlflow.log_feedback(
-                trace_id=trace_id,
-                name="helpful_user_feedback",
-                value=choice,
-                source=AssessmentSource(
-                    source_type=AssessmentSourceType.HUMAN,
-                    source_id=app_user.identifier,
-                ),
-            )

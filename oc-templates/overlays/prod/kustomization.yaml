@@ -11,4 +11,4 @@ patches:
   - path: add-secret-values.patch.yaml
     target:
       kind: Secret
-      name: demo-mlflow-agent-tracing-secret
+      name: nps-agent-secret

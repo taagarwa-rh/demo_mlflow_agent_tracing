@@ -9,7 +9,7 @@ on:
       - ".github/workflows/run-evals-action.yml"
 
 env:
-  IMAGE_NAME: quay.io/rh_ee_taagarwa/demo_mlflow_agent_tracing
+  IMAGE_NAME: quay.io/rh_ee_taagarwa/nps-agent
 
 jobs:
   build-and-push:
@@ -58,9 +58,6 @@ jobs:
             -e OPENAI_API_KEY='${{ secrets.OPENAI_API_KEY }}' \
             -e OPENAI_BASE_URL='${{ secrets.OPENAI_BASE_URL }}' \
             -e OPENAI_MODEL_NAME='${{ vars.OPENAI_MODEL_NAME }}' \
-            -e EMBEDDING_API_KEY='${{ secrets.EMBEDDING_API_KEY }}' \
-            -e EMBEDDING_MODEL_NAME='${{ vars.EMBEDDING_MODEL_NAME }}' \
-            -e EMBEDDING_BASE_URL='${{ secrets.EMBEDDING_BASE_URL }}' \
-            -e EMBEDDING_SEARCH_PREFIX='${{ vars.EMBEDDING_SEARCH_PREFIX }}' \
+            -e NPS_API_KEY='${{ vars.NPS_API_KEY }}' \
             ${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.sha }} \
-            /bin/sh -c "uv run --locked --no-sync scripts/ingest.py && uv run --locked --no-sync python scripts/inner_loop_evals.py --run-name ${{ needs.build-and-push.outputs.sha }}"
+            /bin/sh -c "uv run --locked --no-sync python scripts/inner_loop_evals.py --run-name ${{ needs.build-and-push.outputs.sha }}"
