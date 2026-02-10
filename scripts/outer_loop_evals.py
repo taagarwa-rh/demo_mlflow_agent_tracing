@@ -3,11 +3,11 @@ import os
 from typing import Literal
 
 import mlflow
-from demo_mlflow_agent_tracing.settings import Settings
 from dotenv import load_dotenv
 from mlflow import MlflowClient
 from mlflow.genai import evaluate
 from mlflow.genai.judges import make_judge
+from nps_agent.settings import Settings
 
 logger = logging.getLogger(__name__)
 

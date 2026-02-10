@@ -1,5 +1,5 @@
 default_version := `uv version --short`
-project_name := "demo_mlflow_agent_tracing"
+project_name := "nps_agent"
 
 _default:
     @ just --list --unsorted --justfile {{ justfile() }}
@@ -47,5 +47,5 @@ test-container: (build-image "latest")
 [group("Deploy")]
 push-image:
     - podman build -t {{ project_name }}:{{ default_version }} --platform linux/amd64 -f Containerfile .
-    - podman push {{ project_name }}:{{ default_version }} quay.io/rh_ee_taagarwa/demo_mlflow_agent_tracing:{{ default_version }}
-    - podman push {{ project_name }}:{{ default_version }} quay.io/rh_ee_taagarwa/demo_mlflow_agent_tracing:latest
+    - podman push {{ project_name }}:{{ default_version }} quay.io/rh_ee_taagarwa/nps-agent:{{ default_version }}
+    - podman push {{ project_name }}:{{ default_version }} quay.io/rh_ee_taagarwa/nps-agent:latest
