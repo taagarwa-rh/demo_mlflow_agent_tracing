@@ -12,5 +12,7 @@ uv sync --extra examples
 
 ```
 examples            # Examples directory
-└── autologging     # Examples on autologging
+├── autologging     # Examples on autologging
+├── dual_export.py  # Example of exporting OTEL and MLflow traces simultaneously
+└── README.md       # This file
 ```
