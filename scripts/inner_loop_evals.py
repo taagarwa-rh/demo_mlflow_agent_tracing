@@ -16,8 +16,6 @@ from mlflow.entities import Feedback
 from mlflow.genai import evaluate
 from mlflow.genai.scorers import Completeness, Correctness, RelevanceToQuery, scorer
 
-mlflow.langchain.autolog(run_tracer_inline=True)
-
 logger = logging.getLogger(__name__)
 
 

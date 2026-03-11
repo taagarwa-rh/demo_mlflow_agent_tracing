@@ -66,6 +66,18 @@ def update_tracing(state: AgentState, runtime: Runtime):
         pass
 
 
+def instrument_mlflow(settings: Settings):
+    """Instrument MLflow before agent run."""
+    # Set the tracking URI, Experiment, and Active Model
+    if settings.MLFLOW_TRACKING_URI:
+        mlflow.set_tracking_uri(settings.MLFLOW_TRACKING_URI)
+    if settings.MLFLOW_EXPERIMENT_NAME:
+        mlflow.set_experiment(settings.MLFLOW_EXPERIMENT_NAME)
+
+    # Initialize MLflow autologging
+    mlflow.langchain.autolog(run_tracer_inline=True)
+
+
 async def build_agent(*, return_connection: bool = False, use_memory_checkpointer: bool = False):
     """
     Build the agent.
@@ -77,6 +89,7 @@ async def build_agent(*, return_connection: bool = False, use_memory_checkpointe
     """
     # Construct the agent
     settings = Settings()
+    instrument_mlflow(settings=settings)
 
     # Get the chat model
     llm = get_chat_model()
