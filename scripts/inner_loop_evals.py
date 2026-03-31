@@ -6,15 +6,15 @@ from typing import Any
 from uuid import uuid4
 
 import mlflow
-from demo_mlflow_agent_tracing.agent import build_agent, format_config, format_context, format_input
-from demo_mlflow_agent_tracing.mcp_server import SearchResult
-from demo_mlflow_agent_tracing.settings import Settings
 from dotenv import load_dotenv
 from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
 from mlflow import MlflowClient
 from mlflow.entities import Feedback
 from mlflow.genai import evaluate
 from mlflow.genai.scorers import Completeness, Correctness, RelevanceToQuery, scorer
+from nps_agent.agent import build_agent, format_config, format_context, format_input
+from nps_agent.mcp_server import SearchResult
+from nps_agent.settings import Settings
 
 mlflow.langchain.autolog(run_tracer_inline=True)
 

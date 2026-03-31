@@ -12,20 +12,20 @@ from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langgraph.runtime import Runtime
 from mlflow.langchain.langchain_tracer import MlflowLangchainTracer
 
-from demo_mlflow_agent_tracing.base import ContextSchema
-from demo_mlflow_agent_tracing.chat_model import get_chat_model
-from demo_mlflow_agent_tracing.constants import CHECKPOINTER_PATH, DIRECTORY_PATH
-from demo_mlflow_agent_tracing.settings import Settings
+from nps_agent.base import ContextSchema
+from nps_agent.chat_model import get_chat_model
+from nps_agent.constants import CHECKPOINTER_PATH, DIRECTORY_PATH
+from nps_agent.settings import Settings
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = """You are a helpful assistant. You answer questions using a knowledge base.
+SYSTEM_PROMPT = """You are a helpful assistant. You help users get information about the United States National Parks Service (NPS). Use the available tools to answer the user's questions. 
 
-When a user asks a question, you must search for the answer in the knowledge base.
+Most tools require the park code in order to get information. Use the search_parks tool first to find the park code, then use it in other tool calls.
 
-DO NOT provide any answer that is not supported by information from the knowledge base.
+IMPORTANT: Do not attempt to answer the question on your own, use the available tools to help answer the questions.
 
-If you cannot find any information on the topic in the knowledge base, tell the user and do not attempt to answer the question on your own.
+IMPORTANT: Do not answer any questions not related to National Parks. Explain that you cannot help with those requests but are happy to help with NPS requests.
 """.strip()
 
 
@@ -80,15 +80,12 @@ async def build_agent(*, return_connection: bool = False, use_memory_checkpointe
 
     # Get the chat model
     llm = get_chat_model()
-    llm.temperature = 0.0
+    llm.temperature = 0.7
 
     # Build MCP env: include OpenAI or Vertex vars depending on which LLM backend is configured
     mcp_env = {
+        "NPS_API_KEY": settings.NPS_API_KEY.get_secret_value(),
         "CHAINLIT_AUTH_SECRET": (settings.CHAINLIT_AUTH_SECRET.get_secret_value() if settings.CHAINLIT_AUTH_SECRET else ""),
-        "EMBEDDING_API_KEY": (settings.EMBEDDING_API_KEY.get_secret_value() if settings.EMBEDDING_API_KEY else "") or "",
-        "EMBEDDING_MODEL_NAME": settings.EMBEDDING_MODEL_NAME or "",
-        "EMBEDDING_BASE_URL": settings.EMBEDDING_BASE_URL or "",
-        "EMBEDDING_SEARCH_PREFIX": settings.EMBEDDING_SEARCH_PREFIX,
     }
     if settings.openai_enabled:
         mcp_env["OPENAI_API_KEY"] = settings.OPENAI_API_KEY.get_secret_value()
@@ -105,7 +102,7 @@ async def build_agent(*, return_connection: bool = False, use_memory_checkpointe
             "content_writer": {
                 "transport": "stdio",
                 "command": "python",
-                "args": [str(DIRECTORY_PATH / "src" / "demo_mlflow_agent_tracing" / "mcp_server.py")],
+                "args": [str(DIRECTORY_PATH / "src" / "nps_agent" / "mcp_server.py")],
                 "env": mcp_env,
             }
         }

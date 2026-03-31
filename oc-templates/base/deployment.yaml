@@ -2,19 +2,19 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: "demo-mlflow-agent-tracing-deployment"
+  name: "nps-agent-deployment"
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: "demo-mlflow-agent-tracing"
+      app: "nps-agent"
   template:
     metadata:
       labels:
-        app: "demo-mlflow-agent-tracing"
+        app: "nps-agent"
     spec:
       containers:
-        - name: "demo-mlflow-agent-tracing"
+        - name: "nps-agent"
           image: "quay.io/rh_ee_taagarwa/demo_mlflow_agent_tracing:latest"
           imagePullPolicy: Always
           ports:
@@ -22,7 +22,7 @@ spec:
               protocol: TCP
           envFrom:
             - secretRef:
-                name: demo-mlflow-agent-tracing-secret  
+                name: nps-agent-secret  
           resources:
             limits:
               cpu: "1"

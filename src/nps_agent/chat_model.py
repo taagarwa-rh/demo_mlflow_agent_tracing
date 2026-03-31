@@ -2,7 +2,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_google_vertexai.model_garden import ChatAnthropicVertex
 from langchain_openai import ChatOpenAI
 
-from demo_mlflow_agent_tracing.settings import Settings
+from nps_agent.settings import Settings
 
 
 def get_chat_model() -> BaseChatModel:

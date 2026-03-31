@@ -1,4 +1,4 @@
-# Demo MLFlow Agent Tracing
+# NPS Agent
 
 ![](./docs/inner_outer_loop.png)
 
@@ -19,12 +19,12 @@
 
 ## Background
 
-You work for OSCORP, an evil corporation bent on achieving world domination.
-You've been tasked with building an agent to answer questions about OSCORP's corporate policies.
-In [`public/oscorp_policies`](./public/oscorp_policies/) you'll find a collection of corporate memos about company policies written by Dr. Octavius, OSCORP's supervillan CEO.
-An agent equipped with a tool to search these documents has already been created for you in [`src/demo_mlflow_agent_tracing/agent.py`](./src/demo_mlflow_agent_tracing/agent.py).
+You've built an agent for the U.S. National Parks Service (NPS) that helps users to find and research national parks.
+It uses the [NPS API](https://www.nps.gov/subjects/developer/api-documentation.htm) to get current information about national parks.
+Your next task is to evaluate this agent's performace both before and after deployment.
 
-This repo will walk you through how to demonstrate, trace, and evaluate this agent using MLFlow.
+This repo will walk you through how to evaluate an agent during development, migrate it to production, and evaluate it in production.
+This repo shows how to do all of this using MLflow.
 You will learn how to:
 
 - **Collect Traces**: Talk to the agent and collect/view live conversation traces.
@@ -69,16 +69,14 @@ graph TD
 ## Prerequisites
 
 - An LLM backend: either **OpenAI-compatible** (e.g. OpenAI, vLLM, Ollama) or **Vertex AI** (Claude on Vertex)
-- (Optional) An OpenAI-compatible embeddings server for the knowledge base (e.g. OpenAI, vLLM, Ollama)
-- A remote or local MLFlow server
 
 ## Local Installation
 
 1. Clone the repository:
 
     ```sh
-    git clone https://github.com/taagarwa-rh/demo_mlflow_agent_tracing.git
-    cd demo_mlflow_agent_tracing
+    git clone https://github.com/redhat-et/nps_agent.git
+    cd nps_agent
     ```
 
 2. Copy `.env.example` to `.env` and fill in required environment variables:
@@ -110,6 +108,8 @@ graph TD
 ## Development Evaluation (Inner-Loop)
 
 ### Generate Synthetic Evaluation Data
+
+TODO: Update this
 
 Inner-loop evaluation covers the eval scope typically occupied by the data scientist or AI engineer.
 These evals help answer the question, "Am I ready to deploy this agent to production?"
@@ -163,14 +163,18 @@ After running the above script, visit your MLFlow server and navigate to your ex
 You can chat with the agent using the available chainlit interface.
 If you want to start a new conversation, click the pencil and paper icon in the top left corner.
 
-The agent has one tool available to it.
+The agent has five tools available to it.
 
-1. `search`: Search the knowledge base for answers to your questions.
+1. `search_parks`: Search for national parks by state, park code, or query string.
+2. `get_park_alerts`: Get current alerts for a specific national park.
+3. `get_park_campgrounds`: Get campground information for a specific national park.
+4. `get_park_events`: Get upcoming events for a specific national park.
+5. `get_visitor_centers`: Get visitor center information for a specific national park.
 
 To start up the agent locally, run
 
 ```sh
-uv run chainlit run src/demo_mlflow_agent_tracing/app.py
+uv run chainlit run src/nps_agent/app.py
 ```
 
 ### Review Traces
@@ -179,6 +183,8 @@ Any conversation you have with the agent or run through evaluations is automatic
 
 You can review traces by accessing your experiment through the MLFlow UI.
 Just go to Experiments > Your experiment > Traces
+
+TODO: Update these images
 
 ![](./docs/tracing_dashboard.png)
 
@@ -196,23 +202,19 @@ TODO
 
 Set `LLM_PROVIDER` to `openai` or `vertex`, then set the variables for that provider. All other LLM-related vars are conditional on the chosen provider.
 
-| Variable                             | Required | Default                 | Description                                                                                              |
-| ------------------------------------ | -------- | ----------------------- | -------------------------------------------------------------------------------------------------------- |
-| LLM_PROVIDER                         | No       | `openai`                | Which LLM backend to use: `openai` or `vertex`.                                                           |
-| OPENAI_API_KEY                       | When `openai` | `None`             | API key for OpenAI-compatible server.                                                                    |
-| OPENAI_MODEL_NAME                    | When `openai` | `None`             | Name of the LLM to use (e.g. `gpt-4o`, `qwen3:8b`).                                                       |
-| OPENAI_BASE_URL                      | No       | `None`                  | Base URL for your OpenAI-compatible server. Optional.                                                     |
-| VERTEX_PROJECT_ID                    | When `vertex` | `None`              | GCP project ID for Vertex AI (Claude on Vertex).                                                         |
-| VERTEX_REGION                       | When `vertex` | `None`              | Vertex AI region (e.g. `us-central1`).                                                                   |
-| VERTEX_MODEL_NAME                   | When `vertex` | `None`              | Claude model name on Vertex (e.g. `claude-3-5-sonnet@20241022`).                                         |
-| CHAINLIT_AUTH_SECRET                 | No       | `None`                  | Authorization secret for Chainlit chat UI (optional). Generate with `chainlit create-secret` when using the web app. |
-| MLFLOW_TRACKING_URI                  | No       | `http://localhost:5000` | URI for the MLFlow tracking server.                                                                      |
-| MLFLOW_EXPERIMENT_NAME               | No       | `Default`               | Name of the MLFlow experiment to log traces/datasets to.                                                 |
-| MLFLOW_SYSTEM_PROMPT_URI             | No       | `None`                  | System prompt URI from the MLFlow server. If not set, a default system prompt will be used.              |
-| MLFLOW_GENAI_EVAL_MAX_WORKERS        | No       | `10`                    | Maximum number of parallel workers when running evaluations.                                             |
-| MLFLOW_GENAI_EVAL_MAX_SCORER_WORKERS | No       | `10`                    | Maximum number of parallel workers when scoring model outputs during evaluations.                        |
-| EMBEDDING_API_KEY                    | No       | `None`                  | API key for the OpenAI-compatible embeddings server (optional).                                          |
-| EMBEDDING_MODEL_NAME                 | No       | `None`                  | Name of the embedding model to use (optional).                                                            |
-| EMBEDDING_BASE_URL                   | No       | `None`                  | Base URL for your OpenAI-compatible embeddings server (optional).                                        |
-| EMBEDDING_SEARCH_PREFIX              | No       | ` `                     | Prefix to add to each embeddings search query prior to embedding.                                        |
-| EMBEDDING_DOCUMENT_PREFIX            | No       | ` `                     | Prefix to add to each embeddings document prior to embedding.                                            |
+| Variable                             | Required      | Default                 | Description                                                                                                          |
+| ------------------------------------ | ------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| LLM_PROVIDER                         | No            | `openai`                | Which LLM backend to use: `openai` or `vertex`.                                                                      |
+| OPENAI_API_KEY                       | When `openai` | `None`                  | API key for OpenAI-compatible server.                                                                                |
+| OPENAI_MODEL_NAME                    | When `openai` | `None`                  | Name of the LLM to use (e.g. `gpt-4o`, `qwen3:8b`).                                                                  |
+| OPENAI_BASE_URL                      | No            | `None`                  | Base URL for your OpenAI-compatible server. Optional.                                                                |
+| VERTEX_PROJECT_ID                    | When `vertex` | `None`                  | GCP project ID for Vertex AI (Claude on Vertex).                                                                     |
+| VERTEX_REGION                        | When `vertex` | `None`                  | Vertex AI region (e.g. `us-central1`).                                                                               |
+| VERTEX_MODEL_NAME                    | When `vertex` | `None`                  | Claude model name on Vertex (e.g. `claude-3-5-sonnet@20241022`).                                                     |
+| NPS_API_KEY                          | Yes           | `None`                  | API key for the NPS REST API.                                                                                        |
+| CHAINLIT_AUTH_SECRET                 | No            | `None`                  | Authorization secret for Chainlit chat UI (optional). Generate with `chainlit create-secret` when using the web app. |
+| MLFLOW_TRACKING_URI                  | No            | `http://localhost:5000` | URI for the MLFlow tracking server.                                                                                  |
+| MLFLOW_EXPERIMENT_NAME               | No            | `Default`               | Name of the MLFlow experiment to log traces/datasets to.                                                             |
+| MLFLOW_SYSTEM_PROMPT_URI             | No            | `None`                  | System prompt URI from the MLFlow server. If not set, a default system prompt will be used.                          |
+| MLFLOW_GENAI_EVAL_MAX_WORKERS        | No            | `10`                    | Maximum number of parallel workers when running evaluations.                                                         |
+| MLFLOW_GENAI_EVAL_MAX_SCORER_WORKERS | No            | `10`                    | Maximum number of parallel workers when scoring model outputs during evaluations.                                    |

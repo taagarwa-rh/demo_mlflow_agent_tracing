@@ -28,12 +28,8 @@ class Settings(BaseSettings):
     VERTEX_REGION: Optional[str] = Field(None, description="Vertex AI region (e.g. us-central1)")
     VERTEX_MODEL_NAME: Optional[str] = Field(None, description="Claude model name on Vertex (e.g. claude-3-5-sonnet@20241022)")
 
-    # Embedding Server
-    EMBEDDING_API_KEY: Optional[SecretStr] = Field(None, description="API key for authenticating with the server")
-    EMBEDDING_MODEL_NAME: Optional[str] = Field(None, description="Name of the model to use (e.g. `nomic-embed-text`)")
-    EMBEDDING_BASE_URL: Optional[str] = Field(None, description="Base URL of the server")
-    EMBEDDING_DOCUMENT_PREFIX: Optional[str] = Field("", description="Prefix for embeddings for documents")
-    EMBEDDING_SEARCH_PREFIX: Optional[str] = Field("", description="Prefix for embeddings for search queries")
+    # NPS API Key
+    NPS_API_KEY: Optional[SecretStr] = Field(None, description="Key for the NPS REST API")
 
     # Chainlit
     CHAINLIT_AUTH_SECRET: Optional[SecretStr] = Field(
@@ -61,11 +57,6 @@ class Settings(BaseSettings):
         """Check if required Keycloak environment variables are set."""
         return self.CHAINLIT_AUTH_SECRET is not None
 
-    @property
-    def embedding_server_enabled(self) -> bool:
-        """Check if optional embedding server environment variables are set."""
-        return self.EMBEDDING_API_KEY is not None and self.EMBEDDING_MODEL_NAME is not None
-
     @model_validator(mode="after")
     def llm(self) -> Self:
         """Validate that required environment variables are set for the selected LLM_PROVIDER."""
@@ -77,4 +68,9 @@ class Settings(BaseSettings):
                 raise Exception("LLM_PROVIDER is 'vertex'. Set VERTEX_PROJECT_ID, VERTEX_REGION, and VERTEX_MODEL_NAME.")
         return self
 
-    # CHAINLIT_AUTH_SECRET is optional; required only when running the Chainlit chat UI.
+    @model_validator(mode="after")
+    def nps_api_key(self) -> Self:
+        """Validate that the NPS API key is set."""
+        if self.NPS_API_KEY is None:
+            raise Exception("NPS_API_KEY is missing in your environment")
+        return self
